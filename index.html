@@ -192,9 +192,8 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     <div class="rack" id="rack"></div>
     <div class="drops" id="drops" aria-hidden="true"></div>
     <div class="meta">
-      <div>Streak <b id="streak">0</b></div>
-      <div>Jars <b id="mastered">0</b>/80</div>
-      <div>Pets <b id="petCount">0</b>/8</div>
+      <div>Jars <b id="mastered">0</b>/40</div>
+      <div>Pets <b id="petCount">0</b>/4</div>
     </div>
   </section>
 
@@ -241,12 +240,12 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 (function(){
 "use strict";
 
-var KEY='fizzwick.v5', PRIOR=['fizzwick.v4','fizzwick.v3','fizzwick.v2','fizzwick.v1'];
-var ROUND=10, FAST=3000, BMAX=10, ROWS=[1,2,3,4,5,6,7,8], TOTAL=80;
-var REPS=5;          /* calm tier: five right in a row lights a jar, no clock */
-var HUES={1:'#6FE3B8',2:'#FFC061',3:'#FF7FA8',4:'#B99BFF',5:'#6FC9E8',6:'#FF8E72',7:'#C7E36F',8:'#E58BE0'};
+var KEY='fizzwick.v6', PRIOR=[];
+var ROUND=5, FAST=3000, BMAX=10, ROWS=[1,2,5,10], TOTAL=40;
+var REPS=3;          /* just-starting tier: 3 right (not in a row) lights a jar, no clock, no penalties */
+var HUES={1:'#6FE3B8',2:'#FFC061',3:'#FF7FA8',4:'#B99BFF',5:'#6FC9E8',6:'#FF8E72',7:'#C7E36F',8:'#E58BE0',10:'#9D8DF1'};
 var SUB={1:'one of everything',2:'doubles',3:'triples',4:'double the doubles',5:'counting by fives',
-         6:'double the threes',7:'the tricky ones',8:'double the fours'};
+         6:'double the threes',7:'the tricky ones',8:'double the fours',10:'counting by tens'};
 var SPECIES={1:'Dustwing Moth',2:'Pipistrelle Bat',3:'Bogwart Toad',4:'Emberling Dragon',
              5:'Cloudray',6:'Spiralshell Snail',7:'Tawny Owl',8:'Inkfoot Octopus',
              9:'Rustpaw Fox',10:'Prickle Hedgehog',11:'Snapclaw Crab',12:'Curlfin Seahorse',
@@ -376,13 +375,13 @@ function petSVG(design,px,glow,hue){
   var f=glow?' style="filter:drop-shadow(0 0 7px '+c+')"':'';
   return '<svg viewBox="0 0 48 48" width="'+px+'" height="'+px+'" aria-hidden="true"'+f+'>'+g+'</svg>';
 }
-function designFor(a){return a<=4?a:(species[a]||a);}
-/* assign a random distinct creature to each of rows 5-8 once, then keep it */
+function designFor(a){return species[a]||a;}
+/* assign a random distinct creature to each table once, then keep it */
 function ensureSpecies(){
   if(!species)species={};
-  var taken={},a,avail,pk;
-  for(a=5;a<=8;a++)if(species[a])taken[species[a]]=1;
-  for(a=5;a<=8;a++){
+  var taken={},i,a,avail,pk;
+  for(i=0;i<ROWS.length;i++){a=ROWS[i];if(species[a])taken[species[a]]=1;}
+  for(i=0;i<ROWS.length;i++){a=ROWS[i];
     if(species[a])continue;
     avail=POOL.filter(function(d){return !taken[d];});
     pk=avail[Math.floor(Math.random()*avail.length)];
@@ -459,12 +458,8 @@ function importSave(file){
   };
   r.readAsText(file);
 }
-function preload(){
-  for(var a=1;a<=6;a++)for(var b=1;b<=BMAX;b++){
-    var f=getFact(a,b);
-    if(!f.e){f.n=Math.max(f.n,REPS);f.c=Math.max(f.c,REPS);f.s=Math.max(f.s,REPS);f.ema=f.ema||3000;f.e=1;}
-  }
-}
+/* just-starting: nothing pre-credited — every jar is hers to light */
+function preload(){}
 
 /* ================= sound ================= */
 var ac=null;
@@ -519,11 +514,12 @@ function limitFor(f){
   if(!earned(f))return f.ema?Math.max(7000,Math.min(11000,f.ema*2.4)):10000;
   return 6500;
 }
+/* two clearly-different wrong answers: neighbours from the same count-by table */
 function distractors(a,b){
-  var p=a*b,near=[p+a,p-a,p+b,p-b,p+1,p-1,p+2,p-2,p+a*2,a+b],out=[],seen={},i,v;
+  var p=a*b,cand=[p+a,p-a,p+a*2,p-a*2,p+a*3],out=[],seen={},i,v;
   seen[p]=1;
-  for(i=0;i<near.length&&out.length<3;i++){v=near[i];if(v>0&&v<=110&&!seen[v]){seen[v]=1;out.push(v);}}
-  var g=1;while(out.length<3){if(!seen[p+g]){seen[p+g]=1;out.push(p+g);}g++;}
+  for(i=0;i<cand.length&&out.length<2;i++){v=cand[i];if(v>0&&!seen[v]){seen[v]=1;out.push(v);}}
+  var g=1;while(out.length<2){v=p+g;if(v>0&&!seen[v]){seen[v]=1;out.push(v);}g++;}
   return out;
 }
 function shuffle(A){for(var i=A.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=A[i];A[i]=A[j];A[j]=t;}return A;}
@@ -541,14 +537,14 @@ function paintDrops(){
   for(var i=0;i<ROUND;i++){var s=document.createElement('span');if(i<drops)s.className='on';box.appendChild(s);}
 }
 function updateMeta(){
-  $('streak').textContent=streak;$('mastered').textContent=countGlow();
+  $('mastered').textContent=countGlow();
   $('petCount').textContent=countPets();$('brewCount').textContent='Potion '+(brewed+1);
 }
 function updateMode(){
   $('modeBtn').textContent=calm?'No timer':'Timer on';
   $('modeBtn').classList.toggle('live',!calm);
   fuseBar.classList.toggle('hide',calm);
-  $('legGlow').textContent=calm?'Glowing — five in a row right':'Glowing — fast and right';
+  $('legGlow').textContent='Glowing — you lit this one!';
 }
 var toastT=null;
 function toast(a,msg){
@@ -631,28 +627,26 @@ function answer(v,btn){
     f.c++;f.s++;f.ema=f.ema?Math.round(f.ema*0.6+ms*0.4):ms;streak++;
     btn.classList.add('right');
     cauldron.classList.add('pop');setTimeout(function(){cauldron.classList.remove('pop');},520);
-    var quick=ms<FAST;
-    beep(quick?[660,880,1180]:[620,830],0.16,0.09);
-    say.textContent=quick?'Quick pour.':'That one goes in.';
+    beep([660,880,1180],0.16,0.09);
+    say.textContent='Yes! That one goes in.';
     say.className='say good';
-    if(quick){var pet=feed(cur.a);if(pet)say.textContent='Quick pour — '+pet.name+' ate that one.';}
-    if(!was&&!earned(f)&&calm){
+    var pet=feed(cur.a);if(pet)say.textContent='Yes! '+pet.name+' ate that one.';
+    if(!was&&!earned(f)){
       var left=REPS-f.s;
-      if(left>0&&left<=2)say.textContent=left+' more and this jar lights up.';
+      if(left>0&&left<=2)say.textContent=left===1?'One more and this jar lights up!':left+' more and this jar lights up.';
     }
     if(checkEarn(f)&&!was){
-      say.textContent='That jar is glowing now.';
+      say.textContent='✨ That jar is glowing now!';
       if(rowDone(cur.a)&&!(pets[cur.a]&&pets[cur.a].name))queue.push(cur.a);
     }
     drops++;paintDrops();updateMeta();save();
-    afterTurn(quick?760:620);
+    afterTurn(720);
   }else{
-    f.s=0;streak=0;
     btn.classList.add('wrong');markRight();
-    beep([300,240],0.2,0.07);
-    say.textContent=cur.left+' × '+cur.right+' is '+cur.p+'. This one comes back.';
-    say.className='say miss';
-    updateMeta();save();afterTurn(1900);
+    beep([523,392],0.14,0.05);
+    say.textContent='It’s '+cur.left+' × '+cur.right+' = '+cur.p+'. You’ve got this — next one!';
+    say.className='say';
+    updateMeta();save();afterTurn(1500);
   }
 }
 function timeUp(){
@@ -675,7 +669,7 @@ function showNamer(){
     $('nameIn').value=pets[a].name;
   }else{
     $('nameTitle').textContent='A '+SPECIES[designFor(a)]+' hatched!';
-    $('nameLine').textContent='All ten '+a+'s are glowing, so this one came out of its egg. It lives on the '+a+'s shelf, and it eats fast answers.';
+    $('nameLine').textContent='All ten '+a+'s are glowing, so this one came out of its egg! It lives on the '+a+'s shelf and loves every answer you get right.';
     $('nameIn').value='';
     beep([523,659,784,1046],0.24,0.09);
   }
@@ -702,7 +696,7 @@ function finish(){
   save();
   $('doneName').textContent=name;
   $('doneFill').style.background=hue;
-  $('doneLine').textContent=ROUND+' right in a row of pouring. '+countGlow()+' of '+TOTAL+' jars glowing. No two potions are ever the same.';
+  $('doneLine').textContent='You poured a whole new potion! '+countGlow()+' of '+TOTAL+' jars glowing. Every potion has its own name.';
   $('done').classList.add('on');
   beep([660,880,1100,1320],0.22,0.09);
   updateMeta();
@@ -722,7 +716,7 @@ function buildShelf(){
         (plates[a]?'<span class="plate">'+esc(plates[a])+'</span>':'')+'</h3>'+
         '<div class="petline"><u data-ren="'+a+'">'+st.name+' &middot; rename</u>'+
         '<span class="xp"><i style="width:'+(nx?Math.round(got/span*100):100)+'%;background:'+HUES[a]+'"></i></span>'+
-        '<span>'+(nx?(nx-pet.xp)+' more fast answers':'fully grown')+'</span></div></div></div>';
+        '<span>'+(nx?(nx-pet.xp)+' more to grow up':'fully grown')+'</span></div></div></div>';
     }else{
       head='<div class="rowtop">'+eggSVG(a,46)+
         '<div class="who"><h3>The '+a+'s <em>'+SUB[a]+'</em></h3>'+
@@ -743,7 +737,7 @@ function buildShelf(){
   Array.prototype.forEach.call(host.querySelectorAll('[data-ren]'),function(el){
     el.onclick=function(){renaming=parseInt(el.getAttribute('data-ren'),10);showNamer();};
   });
-  $('shelfNote').textContent=countGlow()+' of '+TOTAL+' jars glowing · '+countPets()+' of 8 pets hatched · '+
+  $('shelfNote').textContent=countGlow()+' of '+TOTAL+' jars glowing · '+countPets()+' of '+ROWS.length+' pets hatched · '+
     brewed+' potion'+(brewed===1?'':'s')+' brewed, all different.';
 }
 function showShelf(on){
@@ -789,6 +783,8 @@ document.addEventListener('keydown',function(e){
 load();
 ensureSpecies();
 preload();save();
+calm=true;                         /* always calm — no clock, no pressure */
+$('modeBtn').style.display='none'; /* hide the timer toggle entirely */
 $('soundBtn').textContent=sound?'Sound on':'Sound off';
 $('soundBtn').setAttribute('aria-pressed',String(sound));
 updateMode();paintDrops();updateMeta();
