@@ -191,6 +191,7 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .bookitem{border:1px solid rgba(239,227,200,.16);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.45;color:var(--parchment-dim);background:rgba(239,227,200,.03)}
 .bookitem b{color:var(--amber);font-family:var(--display);font-weight:500;display:block;margin-bottom:3px;font-size:13px}
 .bookempty{color:var(--parchment-dim);font-size:14.5px;line-height:1.5}
+.startbrew{align-self:center;margin:2px 0 16px;padding:14px 34px;font-size:16px}
 .iknow{display:inline-block;margin-top:5px;font-size:11.5px;color:var(--amber);border:1px solid rgba(255,192,97,.4);border-radius:999px;padding:4px 11px;background:rgba(255,192,97,.06)}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
@@ -229,6 +230,7 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   </section>
 
   <section class="shelf" id="shelf">
+    <button class="go startbrew" id="brewBtn">▶ Start brewing</button>
     <div id="shelves"></div>
     <div class="legend">
       <span><i class="dot"></i> Not brewed yet</span>
@@ -426,6 +428,7 @@ var STORIES=[
 "{pet} yawned, which made {pet2} yawn, which made Fizzwick yawn so big his hat tipped over. That's how the whole lab knew it was officially bedtime."
 ];
 /* ===== STORY-DATA-END ===== */
+var WELCOME="Welcome to Fizzwick's Potion Lab! Fizzwick has been waiting for a new potion-maker. He lit every candle, dusted off the big copper cauldron, and set out ten little eggs — each one hatches into a friend as you fill its shelf with glowing jars. Every time you finish a potion, come back to your storybook to hear what everyone has been up to. Ready to brew?";
 var TEACH=[1,2,5,10,3,4,6,7,8,9];
 var STAGES=[{at:0,name:'Hatchling',s:.78},{at:20,name:'Fledgling',s:.92},
             {at:50,name:'Grown',s:1.06},{at:100,name:'Radiant',s:1.18}];
@@ -437,7 +440,7 @@ var NOUN=['Elixir','Draught','Tonic','Brew','Philtre','Fizz','Syrup','Cordial',
  'Infusion','Essence','Distillate','Remedy','Nectar','Serum'];
 
 var facts={},plates={},pets={},used={},species={},usedStories={},storyLog=[],brewed=0,sound=true,calm=true,storeOk=true;
-var cur=null,drops=0,streak=0,lastKey='',tStart=0,raf=null,locked=true,queue=[],renaming=0;
+var cur=null,drops=0,streak=0,lastKey='',tStart=0,raf=null,locked=true,queue=[],renaming=0,welcomeMode=false;
 
 /* ================= facts ================= */
 function fkey(a,b){return a+'x'+b;}
@@ -689,12 +692,12 @@ function limitFor(f){
   if(!earned(f))return f.ema?Math.max(7000,Math.min(11000,f.ema*2.4)):10000;
   return 6500;
 }
-/* two clearly-different wrong answers: neighbours from the same count-by table */
+/* three clearly-different wrong answers: neighbours from the same count-by table */
 function distractors(a,b){
-  var p=a*b,cand=[p+a,p-a,p+a*2,p-a*2,p+a*3],out=[],seen={},i,v;
+  var p=a*b,cand=[p+a,p-a,p+a*2,p-a*2,p+a*3,p-a*3],out=[],seen={},i,v;
   seen[p]=1;
-  for(i=0;i<cand.length&&out.length<2;i++){v=cand[i];if(v>0&&!seen[v]){seen[v]=1;out.push(v);}}
-  var g=1;while(out.length<2){v=p+g;if(v>0&&!seen[v]){seen[v]=1;out.push(v);}g++;}
+  for(i=0;i<cand.length&&out.length<3;i++){v=cand[i];if(v>0&&!seen[v]){seen[v]=1;out.push(v);}}
+  var g=1;while(out.length<3){v=p+g;if(v>0&&!seen[v]){seen[v]=1;out.push(v);}g++;}
   return out;
 }
 function shuffle(A){for(var i=A.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=A[i];A[i]=A[j];A[j]=t;}return A;}
@@ -948,11 +951,26 @@ function showStory(){
   storyLog.push(text);save();
   var named=Object.keys(pets).filter(function(k){return pets[k]&&pets[k].name;});
   var a=named.length?parseInt(named[Math.floor(Math.random()*named.length)],10):ROWS[0];
+  welcomeMode=false;
+  $('storyTitle').textContent='A little lab tale';
+  $('storyClose').textContent='Back to brewing';
   $('storyPet').innerHTML=petSVG(designFor(a),96,true,HUES[a]).replace('<svg','<svg class="big"');
   $('storyText').textContent=text;
   $('done').classList.remove('on');
   $('story').classList.add('on');
   beep([523,659,784],0.2,0.07);
+}
+/* first-run welcome tale — seeds her storybook, then sends her to the shelf */
+function startWelcome(){
+  storyLog.push(WELCOME);save();
+  welcomeMode=true;
+  $('storyTitle').textContent='Welcome to the lab!';
+  $('storyClose').textContent='See my lab →';
+  var a=ROWS[Math.floor(Math.random()*ROWS.length)];
+  $('storyPet').innerHTML=petSVG(designFor(a),96,true,HUES[a]).replace('<svg','<svg class="big"');
+  $('storyText').textContent=WELCOME;
+  $('story').classList.add('on');
+  beep([523,659,784,1046],0.24,0.09);
 }
 function buildStorybook(){
   var host=$('bookList');host.innerHTML='';
@@ -1011,6 +1029,7 @@ function knowTable(a){
 
 /* ================= wiring ================= */
 $('shelfBtn').onclick=function(){showShelf(!$('shelf').classList.contains('on'));};
+$('brewBtn').onclick=function(){showShelf(false);};
 $('modeBtn').onclick=function(){
   calm=!calm;updateMode();save();
   if(!$('shelf').classList.contains('on')&&!$('done').classList.contains('on')&&!$('namer').classList.contains('on')){
@@ -1028,8 +1047,8 @@ $('nameBtn').onclick=takeName;
 $('nameIn').addEventListener('keydown',function(e){if(e.key==='Enter')takeName();});
 $('resetBtn').onclick=function(){
   if(!confirm('Empty every jar? The pets go back to being eggs too.'))return;
-  facts={};plates={};pets={};used={};species={};brewed=0;drops=0;streak=0;queue=[];
-  ensureSpecies();preload();save();buildShelf();paintDrops();updateMeta();
+  facts={};plates={};pets={};used={};species={};usedStories={};storyLog=[];brewed=0;drops=0;streak=0;queue=[];
+  ensureSpecies();preload();save();buildShelf();paintDrops();updateMeta();startWelcome();
 };
 $('exportBtn').onclick=exportSave;
 $('importBtn').onclick=function(){$('importFile').click();};
@@ -1037,7 +1056,11 @@ $('importFile').onchange=function(){importSave(this.files[0]);this.value='';};
 $('chartBtn').onclick=openChart;
 $('chartClose').onclick=closeChart;
 $('storyBtn').onclick=showStory;
-$('storyClose').onclick=function(){$('story').classList.remove('on');drops=0;paintDrops();updateMeta();ask();};
+$('storyClose').onclick=function(){
+  $('story').classList.remove('on');
+  if(welcomeMode){welcomeMode=false;showShelf(true);return;}
+  drops=0;paintDrops();updateMeta();ask();
+};
 $('storybookBtn').onclick=function(){buildStorybook();$('storybook').classList.add('on');};
 $('bookClose').onclick=function(){$('storybook').classList.remove('on');};
 function anyVeil(){return $('shelf').classList.contains('on')||$('done').classList.contains('on')||$('namer').classList.contains('on')||$('chart').classList.contains('on')||$('story').classList.contains('on')||$('storybook').classList.contains('on');}
@@ -1045,7 +1068,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){closeChart();$('storybook').classList.remove('on');return;}
   if(anyVeil())return;
   var n=parseInt(e.key,10);
-  if(n>=1&&n<=3&&rack.children[n-1])rack.children[n-1].click();
+  if(n>=1&&n<=4&&rack.children[n-1])rack.children[n-1].click();
 });
 
 /* ================= go ================= */
@@ -1058,7 +1081,10 @@ $('soundBtn').textContent=sound?'Sound on':'Sound off';
 $('soundBtn').setAttribute('aria-pressed',String(sound));
 updateMode();paintDrops();updateMeta();buildGrid();
 ROWS.forEach(function(a){if(rowDone(a)&&!(pets[a]&&pets[a].name))queue.push(a);});
-if(queue.length)showNamer();else ask();
+var freshStart=(brewed===0&&storyLog.length===0&&countGlow()===0&&countPets()===0);
+if(queue.length)showNamer();
+else if(freshStart)startWelcome();
+else ask();
 
 /* offline caching so it works with no wifi once added to the Home Screen */
 if('serviceWorker' in navigator){
