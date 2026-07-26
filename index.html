@@ -163,6 +163,36 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .toast svg{width:36px;height:36px;flex:none}
 .toast span{font-family:var(--display);font-size:15px;line-height:1.3}
+.peek{align-self:center;margin-top:2px;padding:8px 16px;border-radius:999px;border:1px solid rgba(255,192,97,.4);
+  color:var(--amber);background:rgba(255,192,97,.06);font-size:13px;transition:.18s}
+.peek::before{content:"🔢 "}
+@media(hover:hover){.peek:hover{background:rgba(255,192,97,.16)}}
+.ghost2{padding:11px 22px;border-radius:999px;border:1px solid rgba(239,227,200,.28);color:var(--parchment);font-weight:600;font-size:13.5px}
+
+.chartcard{max-width:560px}
+.charthead{font-family:var(--display);font-size:21px;color:var(--parchment);line-height:1.2}
+.charthead b{color:var(--amber)}
+.grid{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;width:100%}
+.cell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:5px;
+  font-size:clamp(8px,2.3vw,13px);font-variant-numeric:tabular-nums;background:rgba(239,227,200,.045);
+  color:rgba(239,227,200,.55);transition:background .25s,color .25s,transform .25s,box-shadow .25s}
+.cell.hdr{background:transparent;color:var(--parchment-dim);font-weight:600}
+.cell.dim{opacity:.1}
+.cell.band{background:rgba(255,192,97,.1);color:var(--parchment)}
+.cell.step{background:rgba(255,192,97,.32);color:#FFF6E2;box-shadow:0 0 10px rgba(255,192,97,.4)}
+.cell.answer{background:var(--amber);color:var(--ink);font-weight:700;transform:scale(1.15);box-shadow:0 0 16px rgba(255,192,97,.75)}
+.chartsay{min-height:22px;font-size:15px;color:var(--amber);font-family:var(--display)}
+
+.storycard{max-width:420px}
+.storycard #storyText{font-family:var(--display);font-size:18.5px;line-height:1.55;color:var(--parchment)}
+.storycard #storyPet svg{filter:drop-shadow(0 0 10px rgba(255,192,97,.35))}
+.bookcard{max-width:460px;max-height:82vh;overflow:auto}
+#bookList{display:flex;flex-direction:column;gap:10px;width:100%;text-align:left;margin:2px 0}
+.bookitem{border:1px solid rgba(239,227,200,.16);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.45;color:var(--parchment-dim);background:rgba(239,227,200,.03)}
+.bookitem b{color:var(--amber);font-family:var(--display);font-weight:500;display:block;margin-bottom:3px;font-size:13px}
+.bookempty{color:var(--parchment-dim);font-size:14.5px;line-height:1.5}
+.iknow{display:inline-block;margin-top:5px;font-size:11.5px;color:var(--amber);border:1px solid rgba(255,192,97,.4);border-radius:999px;padding:4px 11px;background:rgba(255,192,97,.06)}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -190,6 +220,7 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
       <div class="say" id="say">Take as long as you like. Nothing is timing you.</div>
     </div>
     <div class="rack" id="rack"></div>
+    <button class="peek" id="chartBtn">Peek at the chart</button>
     <div class="drops" id="drops" aria-hidden="true"></div>
     <div class="meta">
       <div>Jars <b id="mastered">0</b>/40</div>
@@ -206,6 +237,7 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     </div>
     <p class="empty" id="shelfNote"></p>
     <div class="backup">
+      <button class="chip" id="storybookBtn">📖 My storybook</button>
       <button class="chip" id="exportBtn">Back up to Files</button>
       <button class="chip" id="importBtn">Restore from Files</button>
       <input type="file" id="importFile" accept="application/json,.json" hidden>
@@ -219,7 +251,8 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     <div class="flask"><i id="doneFill"></i></div>
     <h2 id="doneName"></h2>
     <p id="doneLine"></p>
-    <button class="go" id="againBtn">Brew another</button>
+    <button class="go" id="storyBtn">✨ Read the lab story</button>
+    <button class="ghost2" id="againBtn">Brew another</button>
     <button class="ghost" id="peekBtn">See my shelf</button>
   </div>
 </div>
@@ -231,6 +264,32 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     <p id="nameLine"></p>
     <input class="namein" id="nameIn" maxlength="20" placeholder="Give it a name" autocomplete="off">
     <button class="go" id="nameBtn">That's its name</button>
+  </div>
+</div>
+
+<div class="veil" id="chart">
+  <div class="card chartcard">
+    <div class="charthead" id="chartHead"></div>
+    <div class="grid" id="grid"></div>
+    <p class="chartsay" id="chartSay"></p>
+    <button class="go" id="chartClose">Back to my potion</button>
+  </div>
+</div>
+
+<div class="veil" id="story">
+  <div class="card storycard">
+    <div id="storyPet"></div>
+    <h2 id="storyTitle">A little lab tale</h2>
+    <p id="storyText"></p>
+    <button class="go" id="storyClose">Back to brewing</button>
+  </div>
+</div>
+
+<div class="veil" id="storybook">
+  <div class="card bookcard">
+    <h2>📖 My Storybook</h2>
+    <div id="bookList"></div>
+    <button class="go" id="bookClose">Close</button>
   </div>
 </div>
 
@@ -250,8 +309,123 @@ var SPECIES={1:'Dustwing Moth',2:'Pipistrelle Bat',3:'Bogwart Toad',4:'Emberling
              5:'Cloudray',6:'Spiralshell Snail',7:'Tawny Owl',8:'Inkfoot Octopus',
              9:'Rustpaw Fox',10:'Prickle Hedgehog',11:'Snapclaw Crab',12:'Curlfin Seahorse',
              13:'Lantern Firefly',14:'Twinkle Starfish'};
-/* rows 5-8 get a random creature drawn from this pool (fixed once per save) */
+/* each table gets a random creature drawn from this pool (fixed once per save) */
 var POOL=[5,6,7,8,9,10,11,12,13,14];
+
+/* ===== STORY-DATA-START ===== warm micro-stories; {pet}/{pet2} become her hatchlings' names */
+var STORIES=[
+"The big copper cauldron hummed a tune all night, so Fizzwick hummed along and forgot what he was stirring. The potion came out lavender and smelled like cookies, which everyone agreed was an improvement.",
+"A small gray moth moved into Fizzwick's hat. He didn't mind one bit. He said it made his thoughts feel fluttery in a nice way.",
+"Fizzwick invented a potion for tidying up, but it folded every sock in the lab into tiny hats. The shelves have never looked fancier.",
+"On rainy nights, the lab windows play soft drum songs. Fizzwick makes cocoa and taps his spoon along, almost on the beat.",
+"One jar on the top shelf only glows when somebody laughs. Every morning Fizzwick tells it his silliest joke so it never feels dim.",
+"The broom swept itself into a cozy corner and fell asleep standing up. Fizzwick tiptoed around it all day, because even brooms need naps.",
+"Somebody left the moonlight on again. Fizzwick decided not to turn it off, since the whole lab looked like it was made of silver.",
+"Fizzwick sneezed while stirring, and the potion turned into butterflies. They spent the whole evening landing on his nose, one polite butterfly at a time.",
+"A tiny cloud lives over the sink now. It only rains when the dishes need washing, which Fizzwick calls very good manners.",
+"The lab stairs creak in a friendly way. Fizzwick says they're just saying hello in their wooden voices.",
+"Deep in the pantry, a jar of star-dust sneezed. Now everything on that shelf sparkles a little, even the pickles.",
+"Fizzwick wrote himself a note that said Remember The Thing. He can't remember what the thing was, but the note glows warmly, so it must have been something nice.",
+"Wednesday's potion smelled exactly like fresh bread. Fizzwick sat right down on the floor and breathed it in until dinnertime.",
+"All the candles flicker in time with Fizzwick's humming. When he hums faster, they wiggle like tiny dancers.",
+"A bubble floated out of the cauldron and simply refused to pop. Now it follows Fizzwick everywhere, and he introduces it as his round friend.",
+"As a joke, Fizzwick planted a teaspoon in a flowerpot. By morning it had sprouted three baby spoons, perfect for stirring very small cups of tea.",
+"The rug by the fire started purring after a cozy potion spilled on it. Fizzwick lies on it every evening and calls it his best mistake ever.",
+"Every book in the lab has a favorite bookmark. The grumpy old spell book likes the ribbon one best, and Fizzwick always remembers.",
+"Fizzwick baked star-shaped cookies for the oven's birthday. The oven glowed extra warm all week, which he took as a thank you.",
+"A hiccup got into the potion shelf somehow. All night the bottles went boop, boop, boop, and Fizzwick giggled himself to sleep.",
+"The teapot fell in love with the sugar bowl. Fizzwick keeps them side by side on the shelf, because that's just good sense.",
+"High in the rafters lives a spider who knits instead of spinning webs. She made Fizzwick a scarf so small he wears it on his thumb.",
+"One sleepy afternoon, Fizzwick tried to catch a yawn in a bottle. He yawned, the bottle yawned, and then the whole lab took a lovely nap.",
+"There's one floorboard that boings like a drum. Fizzwick hops on it every morning to start the day with a good bounce.",
+"The mirror in the hall always shows you with slightly better hair. Fizzwick says that's just the mirror being encouraging.",
+"A firefly got hired as the lab's night light. Her pay is one crumb of honey cake, and she says it's the best job in the world.",
+"Fizzwick's slippers wandered off in the night. He found them by the fire, warming themselves, and honestly he couldn't blame them.",
+"The soup potion learned to stir itself, but only counterclockwise. Fizzwick just turns the whole pot around when nobody's looking.",
+"On the first snow of the year, the windows draw their own frost pictures. This year they drew a hat, a duck, and something Fizzwick calls a wumple.",
+"Once a month the moon peeks in the skylight to check on things. Fizzwick always waves, and the moon always looks a little brighter after.",
+"The doorbell rings a different tiny song for every visitor. When the mail owl comes it plays a drumroll, which the owl clearly enjoys.",
+"Fizzwick keeps a jar labeled Extra Quiet for loud days. When he opens it, everything goes soft and hushed, like snow falling inside the room.",
+"A ladybug landed on Fizzwick's spoon at exactly stirring time. He let her ride around the pot eleven times, then thanked her for her help.",
+"The lab's clock doesn't tick. It tocks twice instead, and Fizzwick says a clock that skips is a clock that's dancing.",
+"Every kettle in the lab whistles in harmony now. Fizzwick has no idea how that happened, but tea time sounds like a tiny concert.",
+"Mittens and oven mitts got mixed up again this morning. Fizzwick's toast came out with thumb-shaped warm spots, and he laughed into his tea about it.",
+"Warm rain fell all afternoon, so Fizzwick set out cups on the windowsill. By evening he had a fine collection of sky tea.",
+"The bubbles in the cauldron came out square on Tuesday. Fizzwick stacked them like blocks and built a small wobbly castle.",
+"When the fire gets sleepy, it snores in little orange puffs. Fizzwick tucks another log in gently, like a blanket.",
+"There's a drawer in the lab that only opens if you say please. Fizzwick thinks that's fair, and he always says thank you too.",
+"There was a button in Fizzwick's soup and a soup stain on his button. He decided the day was perfectly even and had a cookie about it.",
+"Some potions dream. The blue one on the middle shelf hums in its sleep, and Fizzwick is quite sure it dreams about the sea.",
+"The welcome mat learned to say welcome out loud. It only knows the one word, but it says it with all its heart.",
+"A pot of moon flowers blooms only at bedtime. Fizzwick says goodnight to each blossom, and each one nods before folding up.",
+"Fizzwick counted his jars twice and got two different numbers. He decided one jar must be shy, and left out a saucer of star-dust just in case.",
+"The chimney smoke comes out in curly shapes. On good soup days it makes hearts, and today was a very good soup day.",
+"A song got stuck in the cauldron for a week. Everything cooked in it came out humming, even the porridge.",
+"Fizzwick's favorite mug has a chip shaped like a crescent moon. He says it isn't broken, it's just wearing its night sky.",
+"The pantry mice pay rent in tiny drawings. Fizzwick frames his favorites and hangs them above the crumb shelf.",
+"One night the lanterns floated up to the ceiling to see the view. Fizzwick let them stay, and now the lab has its own indoor stars.",
+"Fizzwick taught the coat rack to catch. Now it snags his scarf midair every evening and looks extremely proud of itself.",
+"The garden gnome by the door blushes when you say good morning. Fizzwick says it every day, twice, just to see it happen.",
+"A potion meant for shiny hair made Fizzwick's beard curl into a spiral. He liked it so much he tied a bow on the end.",
+"Thunder rolled by far away, and the lab answered with a polite little rumble of its own. Fizzwick patted the wall and said, nicely done, house.",
+"The honey jar hums whenever bees fly past the window. Fizzwick opens the curtains wide so they can wave at each other.",
+"Glow-in-the-dark tea happened entirely by accident. Now bedtime sips look like drinking a little cup of moonlight, and Fizzwick refuses to fix it.",
+"Every spring the lab grows one new windowsill flower that nobody planted. This year it's polka-dotted and smells like pancakes.",
+"The umbrella stand collects more than umbrellas. So far it holds three wands, a flute, and one very tall breadstick Fizzwick is saving for soup day.",
+"When Fizzwick can't sleep, he counts the bubbles rising in the night cauldron. He has never once made it past twelve.",
+"A rainbow got tangled in the curtains after a storm. Fizzwick untangled it gently, and it left a stripe of pink on the wall as a thank-you gift.",
+"The lab's front door sticks a little in winter. Fizzwick says it's just the house giving everyone one extra second of cozy before they go out.",
+"Fizzwick's shopping list wrote a poem on the back of itself. It rhymed carrots with parrots, and now he sort of wants a parrot.",
+"Two snowflakes landed on the windowsill and didn't melt. Fizzwick keeps them in a tiny cold jar and visits them like old friends.",
+"The stew potion bubbled the word yum in big round letters. Fizzwick took that as a review and bowed to the pot.",
+"At the bottom of the cocoa there's always one extra-chocolatey sip. Fizzwick believes the mug saves it on purpose, as a goodnight present.",
+"{pet} discovered that cauldron steam makes excellent tiny clouds. It spent all morning arranging them into a fluffy little sky above the soup.",
+"Fizzwick lost his spectacles for the third time today. {pet} found them, wore them proudly for one whole minute, then traded them back for a raisin.",
+"A sunbeam moved slowly across the lab floor, and {pet} scooted along with it inch by inch. By afternoon they had both reached the comfy chair.",
+"{pet} tried to hum along with the kettle. The kettle won, but only barely, and Fizzwick clapped for both of them.",
+"Somebody nibbled a perfect circle out of Fizzwick's biscuit. {pet} looked extremely innocent, which is exactly how Fizzwick knew, so he shared the rest.",
+"In the button box, {pet} sorted every button by shininess. Fizzwick said it was the finest sorting he had ever seen, and he meant it.",
+"The bubbles from tonight's potion smelled like strawberries. {pet} popped six with its nose and then sneezed one tiny pink sneeze.",
+"The warmest scarf in the lab is now a nest, because {pet} decided so. Fizzwick wore his second-warmest scarf all winter and never said a word.",
+"Rain pattered softly, and {pet} pressed its nose to the window and fogged up a little circle. Fizzwick drew a smiley face in it, and they both agreed it was art.",
+"{pet} learned to balance a blueberry on its head. Fizzwick balanced a teacup on his, and they walked one whole lap around the lab like champions.",
+"The moonlight potion needed exactly one hundred stirs. {pet} counted along by tapping its tail, and only lost count twice, which Fizzwick called excellent work.",
+"{pet} hid in the sock basket for hide-and-seek. Fizzwick pretended not to notice the wiggling socks for a full five minutes, which is why he's the best at this game.",
+"A dandelion seed drifted in the window and landed right on {pet}'s nose. It made a wish before blowing the seed onward, but it won't say what the wish was.",
+"{pet} decided the big wooden spoon was its friend. Now the spoon gets a goodnight pat every evening, and honestly it does seem shinier.",
+"Fizzwick taught {pet} how to blow one perfect bubble. {pet} taught Fizzwick how to nap in a patch of sun, so they called it even.",
+"One little sip of glow-berry juice, and now {pet}'s hiccups sparkle. Fizzwick says it's the prettiest case of hiccups he has ever treated with honey.",
+"The rug got wrinkled up into a mountain, so {pet} climbed it. At the top it squeaked in triumph, and Fizzwick raised his teacup in salute.",
+"{pet} fell asleep inside Fizzwick's upside-down hat. Fizzwick went hatless all afternoon and told everyone it was on purpose.",
+"Snail mail arrived today, meaning a real snail with a tiny letter. {pet} escorted it across the whole lab floor, which took until supper and was worth every minute.",
+"Every time {pet} yawns now, a little laugh comes out. That's what one sip of giggle potion will do, and Fizzwick can't stop smiling about it.",
+"The feather duster and {pet} had a staring contest. The duster never blinked, but {pet} declared victory anyway and took a winner's nap.",
+"{pet} stacked Fizzwick's spare corks into a tiny tower. When it wobbled over, they both cheered, because knocking it down was the best part all along.",
+"On the coldest night, {pet} curled up next to the warm cauldron like a small round loaf. Fizzwick draped a hanky over it as a blanket and whispered goodnight.",
+"Under the bench, {pet} keeps a secret collection: three acorns, one marble, and a very good stick. Fizzwick pretends he hasn't noticed, and adds a shiny pebble when nobody's looking.",
+"A moth landed on {pet}'s head and stayed there like a bow. {pet} walked extra carefully all evening so it wouldn't fall off.",
+"{pet} sneezed near the flour and turned into a tiny white ghost for one minute. Fizzwick laughed so hard he had to sit down, then dusted it clean with the soft brush.",
+"The bath bubbles were extra fluffy tonight, so {pet} wore a bubble beard. Fizzwick made himself one too, and they nodded at each other like two wise old wizards.",
+"{pet} watched Fizzwick stir the potion, then tried stirring the air with its tail. The potion turned out perfect, so Fizzwick says the air-stirring definitely helped.",
+"Bedtime kept getting closer, and {pet} kept scooting its cushion nearer the fireplace. By the end of the last story it was toast-warm and completely asleep.",
+"{pet} caught a falling autumn leaf before it touched the ground. Fizzwick says that means good luck, so they split a butter cookie to celebrate.",
+"{pet} and {pet2} shared one long noodle from the soup pot. When they reached the middle they bonked noses, and Fizzwick declared it the sweetest supper ever.",
+"It was {pet2}'s turn to pick the bedtime spot, so everyone slept in the window seat. {pet} snored first, then {pet2}, then Fizzwick, in one small cozy pile.",
+"{pet} hid behind the flour sack, and {pet2} looked everywhere except there. Ten minutes later they were both asleep behind the flour sack, so nobody won, or maybe everybody did.",
+"One sunbeam, two sleepy hatchlings. {pet} and {pet2} split it fair and square, half a beam each, tails touching in the middle.",
+"{pet} learned to whistle one note, and {pet2} learned a different note. Together they sound exactly like the doorbell, and Fizzwick keeps answering the door to nobody, laughing every time.",
+"The pillow fort took all afternoon to build. {pet} guarded the front door, {pet2} guarded the back, and Fizzwick delivered snacks to both guards equally.",
+"{pet} found a ribbon, and {pet2} found the other end of it. They paraded around the cauldron like a tiny two-creature festival until bedtime.",
+"On pancake morning, {pet} liked the crispy edges and {pet2} liked the soft middles. Fizzwick says that's exactly why they make a perfect team.",
+"{pet2} sneezed a little spark, and {pet} caught it in a jar. Now they have a night light they made together, and they are very proud of it.",
+"The slipper boat set sail across the rug sea. {pet} sat in the toe, {pet2} sat in the heel, and they sailed bravely until suppertime.",
+"{pet} counted the stars out loud, and {pet2} kept saying bigger numbers that aren't real, like eleventy-twelve. Fizzwick wrote eleventy-twelve on the chalkboard because he liked it too much to correct it.",
+"When the music box played, {pet} spun left and {pet2} spun right. They got dizzy at exactly the same time and flopped into the same beanbag.",
+"{pet} gave {pet2} half of its raspberry, and got back half of the half. This went on for quite a while, so Fizzwick quietly brought more raspberries.",
+"A butterfly visited the lab, and {pet} and {pet2} followed it from window to window all afternoon. When it finally fluttered home, they waved goodbye with their tails.",
+"{pet} yawned, which made {pet2} yawn, which made Fizzwick yawn so big his hat tipped over. That's how the whole lab knew it was officially bedtime."
+];
+/* ===== STORY-DATA-END ===== */
 var TEACH=[1,2,5,10,3,4,6,7,8,9];
 var STAGES=[{at:0,name:'Hatchling',s:.78},{at:20,name:'Fledgling',s:.92},
             {at:50,name:'Grown',s:1.06},{at:100,name:'Radiant',s:1.18}];
@@ -262,7 +436,7 @@ var ADJ=['Moonfrost','Emberfizz','Thundermint','Glimmerdusk','Sourgrape','Velvet
 var NOUN=['Elixir','Draught','Tonic','Brew','Philtre','Fizz','Syrup','Cordial',
  'Infusion','Essence','Distillate','Remedy','Nectar','Serum'];
 
-var facts={},plates={},pets={},used={},species={},brewed=0,sound=true,calm=true,storeOk=true;
+var facts={},plates={},pets={},used={},species={},usedStories={},storyLog=[],brewed=0,sound=true,calm=true,storeOk=true;
 var cur=null,drops=0,streak=0,lastKey='',tStart=0,raf=null,locked=true,queue=[],renaming=0;
 
 /* ================= facts ================= */
@@ -411,7 +585,7 @@ function potionName(){
 }
 
 /* ================= storage (real localStorage, survives close/reopen) ================= */
-function snapshot(){return {v:5,facts:facts,plates:plates,pets:pets,used:used,species:species,brewed:brewed,sound:sound,calm:calm};}
+function snapshot(){return {v:6,facts:facts,plates:plates,pets:pets,used:used,species:species,usedStories:usedStories,storyLog:storyLog,brewed:brewed,sound:sound,calm:calm};}
 function save(){
   if(!storeOk)return;
   try{localStorage.setItem(KEY,JSON.stringify(snapshot()));}catch(e){storeOk=false;}
@@ -421,6 +595,7 @@ function readKey(k){
 }
 function absorb(d){
   facts=d.facts||{};plates=d.plates||{};pets=d.pets||{};used=d.used||{};species=d.species||{};brewed=d.brewed||0;
+  usedStories=d.usedStories||{};storyLog=d.storyLog||[];
   if(typeof d.sound==='boolean')sound=d.sound;
   if(typeof d.calm==='boolean')calm=d.calm;
   for(var k in facts){var f=facts[k];if(f.e===undefined)f.e=(f.s>=3&&f.ema>0&&f.ema<=3500)?1:0;}
@@ -503,7 +678,7 @@ function pick(){
     }
   });
   var nu=nextUnseen();
-  if(nu&&(inProgress()<3||!pool.length)){pool.push({a:nu.a,b:nu.b,w:6,fresh:true});total+=6;}
+  if(nu&&(inProgress()<4||!pool.length)){pool.push({a:nu.a,b:nu.b,w:6,fresh:true});total+=6;}
   if(!pool.length)return {a:1,b:1,fresh:false};
   var r=Math.random()*total;
   for(var i=0;i<pool.length;i++){r-=pool[i].w;if(r<=0)return pool[i];}
@@ -720,7 +895,8 @@ function buildShelf(){
     }else{
       head='<div class="rowtop">'+eggSVG(a,46)+
         '<div class="who"><h3>The '+a+'s <em>'+SUB[a]+'</em></h3>'+
-        '<div class="petline">'+(done?'Ready to hatch':'Light up all ten jars and this egg hatches')+'</div></div></div>';
+        '<div class="petline">'+(done?'Ready to hatch':'Light up all ten jars and this egg hatches')+
+        (done?'':' <u class="iknow" data-know="'+a+'">I already know my '+a+'s</u>')+'</div></div></div>';
     }
     var jars='<div class="jars">';
     for(var b=1;b<=BMAX;b++){
@@ -737,6 +913,9 @@ function buildShelf(){
   Array.prototype.forEach.call(host.querySelectorAll('[data-ren]'),function(el){
     el.onclick=function(){renaming=parseInt(el.getAttribute('data-ren'),10);showNamer();};
   });
+  Array.prototype.forEach.call(host.querySelectorAll('[data-know]'),function(el){
+    el.onclick=function(){knowTable(parseInt(el.getAttribute('data-know'),10));};
+  });
   $('shelfNote').textContent=countGlow()+' of '+TOTAL+' jars glowing · '+countPets()+' of '+ROWS.length+' pets hatched · '+
     brewed+' potion'+(brewed===1?'':'s')+' brewed, all different.';
 }
@@ -746,6 +925,88 @@ function showShelf(on){
   $('shelfBtn').textContent=on?'Back to brewing':'My shelf';
   if(on){cancelAnimationFrame(raf);locked=true;rack.classList.add('locked');buildShelf();}
   else ask();
+}
+
+/* ================= stories (the reward) ================= */
+function hatchedNames(){var a=[],k;for(k in pets){if(pets[k]&&pets[k].name)a.push(pets[k].name);}return a;}
+function fillStory(s){
+  var names=hatchedNames();
+  function one(ex){var pool=names.filter(function(n){return n!==ex;});return pool.length?pool[Math.floor(Math.random()*pool.length)]:null;}
+  var p1=one(null)||'your newest hatchling';
+  var p2=one(p1)||'another little one';
+  return s.replace(/\{pet2\}/g,p2).replace(/\{pet\}/g,p1);
+}
+function pickStoryIndex(){
+  var free=[],i;
+  for(i=0;i<STORIES.length;i++)if(!usedStories[i])free.push(i);
+  if(!free.length){usedStories={};for(i=0;i<STORIES.length;i++)free.push(i);}
+  return free[Math.floor(Math.random()*free.length)];
+}
+function showStory(){
+  var i=pickStoryIndex();usedStories[i]=1;
+  var text=fillStory(STORIES[i]);
+  storyLog.push(text);save();
+  var named=Object.keys(pets).filter(function(k){return pets[k]&&pets[k].name;});
+  var a=named.length?parseInt(named[Math.floor(Math.random()*named.length)],10):ROWS[0];
+  $('storyPet').innerHTML=petSVG(designFor(a),96,true,HUES[a]).replace('<svg','<svg class="big"');
+  $('storyText').textContent=text;
+  $('done').classList.remove('on');
+  $('story').classList.add('on');
+  beep([523,659,784],0.2,0.07);
+}
+function buildStorybook(){
+  var host=$('bookList');host.innerHTML='';
+  if(!storyLog.length){host.innerHTML='<p class="bookempty">No stories yet. Finish a potion and Fizzwick will tell you what everyone has been up to!</p>';return;}
+  for(var i=storyLog.length-1;i>=0;i--){
+    var d=document.createElement('div');d.className='bookitem';
+    d.innerHTML='<b>Tale '+(i+1)+'</b>'+esc(storyLog[i]);
+    host.appendChild(d);
+  }
+}
+
+/* ================= times-table helper (count up by the number) ================= */
+var chartTimers=[];
+function clearChartTimers(){chartTimers.forEach(clearTimeout);chartTimers=[];}
+function buildGrid(){
+  var g=$('grid');g.innerHTML='';var r,c,el;
+  el=document.createElement('div');el.className='cell hdr';el.textContent='×';g.appendChild(el);
+  for(c=1;c<=10;c++){el=document.createElement('div');el.className='cell hdr';el.textContent=c;g.appendChild(el);}
+  for(r=1;r<=10;r++){
+    el=document.createElement('div');el.className='cell hdr';el.textContent=r;g.appendChild(el);
+    for(c=1;c<=10;c++){el=document.createElement('div');el.className='cell';el.id='c_'+r+'_'+c;el.textContent=r*c;g.appendChild(el);}
+  }
+}
+function openChart(){
+  if(!cur)return;
+  clearChartTimers();
+  var a=cur.a,b=cur.b,cells=$('grid').querySelectorAll('.cell'),i,c,r;
+  $('chartHead').innerHTML='Counting up by <b>'+a+'</b>';
+  $('chartSay').textContent='';
+  for(i=0;i<cells.length;i++){cells[i].classList.remove('band','step','answer','dim');if(!cells[i].classList.contains('hdr'))cells[i].classList.add('dim');}
+  for(c=1;c<=10;c++){var rc=$('c_'+a+'_'+c);if(rc){rc.classList.remove('dim');rc.classList.add('band');}}
+  for(r=1;r<=10;r++){var cc=$('c_'+r+'_'+b);if(cc){cc.classList.remove('dim');cc.classList.add('band');}}
+  $('chart').classList.add('on');
+  var step=1;
+  (function walk(){
+    if(step>b)return;
+    var cell=$('c_'+a+'_'+step);
+    if(cell){cell.classList.remove('band');cell.classList.add(step<b?'step':'answer');}
+    var seq=[],k;for(k=1;k<=step;k++)seq.push(a*k);
+    $('chartSay').textContent=step<b?seq.join(' · '):(a+' × '+b+' = '+(a*b)+'  🎉');
+    beep([440+step*45],0.09,0.035);
+    step++;
+    chartTimers.push(setTimeout(walk,620));
+  })();
+}
+function closeChart(){clearChartTimers();$('chart').classList.remove('on');}
+
+/* ================= I already know this ================= */
+function knowTable(a){
+  if(!confirm('Light up all your '+a+'s? Only tap this if you already know them!'))return;
+  for(var b=1;b<=BMAX;b++){var f=getFact(a,b);f.n=Math.max(f.n,REPS);f.c=Math.max(f.c,REPS);f.s=Math.max(f.s,REPS);f.ema=f.ema||2500;f.e=1;}
+  if(rowDone(a)&&!(pets[a]&&pets[a].name)&&queue.indexOf(a)<0)queue.push(a);
+  save();updateMeta();buildShelf();
+  if(queue.length)showNamer();
 }
 
 /* ================= wiring ================= */
@@ -773,10 +1034,18 @@ $('resetBtn').onclick=function(){
 $('exportBtn').onclick=exportSave;
 $('importBtn').onclick=function(){$('importFile').click();};
 $('importFile').onchange=function(){importSave(this.files[0]);this.value='';};
+$('chartBtn').onclick=openChart;
+$('chartClose').onclick=closeChart;
+$('storyBtn').onclick=showStory;
+$('storyClose').onclick=function(){$('story').classList.remove('on');drops=0;paintDrops();updateMeta();ask();};
+$('storybookBtn').onclick=function(){buildStorybook();$('storybook').classList.add('on');};
+$('bookClose').onclick=function(){$('storybook').classList.remove('on');};
+function anyVeil(){return $('shelf').classList.contains('on')||$('done').classList.contains('on')||$('namer').classList.contains('on')||$('chart').classList.contains('on')||$('story').classList.contains('on')||$('storybook').classList.contains('on');}
 document.addEventListener('keydown',function(e){
-  if($('shelf').classList.contains('on')||$('done').classList.contains('on')||$('namer').classList.contains('on'))return;
+  if(e.key==='Escape'){closeChart();$('storybook').classList.remove('on');return;}
+  if(anyVeil())return;
   var n=parseInt(e.key,10);
-  if(n>=1&&n<=4&&rack.children[n-1])rack.children[n-1].click();
+  if(n>=1&&n<=3&&rack.children[n-1])rack.children[n-1].click();
 });
 
 /* ================= go ================= */
@@ -787,7 +1056,7 @@ calm=true;                         /* always calm — no clock, no pressure */
 $('modeBtn').style.display='none'; /* hide the timer toggle entirely */
 $('soundBtn').textContent=sound?'Sound on':'Sound off';
 $('soundBtn').setAttribute('aria-pressed',String(sound));
-updateMode();paintDrops();updateMeta();
+updateMode();paintDrops();updateMeta();buildGrid();
 ROWS.forEach(function(a){if(rowDone(a)&&!(pets[a]&&pets[a].name))queue.push(a);});
 if(queue.length)showNamer();else ask();
 
