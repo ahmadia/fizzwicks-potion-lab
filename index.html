@@ -552,19 +552,12 @@ function petSVG(design,px,glow,hue){
   var f=glow?' style="filter:drop-shadow(0 0 7px '+c+')"':'';
   return '<svg viewBox="0 0 48 48" width="'+px+'" height="'+px+'" aria-hidden="true"'+f+'>'+g+'</svg>';
 }
-function designFor(a){return species[a]||a;}
-/* assign a random distinct creature to each table once, then keep it */
-function ensureSpecies(){
-  if(!species)species={};
-  var taken={},i,a,avail,pk;
-  for(i=0;i<ROWS.length;i++){a=ROWS[i];if(species[a])taken[species[a]]=1;}
-  for(i=0;i<ROWS.length;i++){a=ROWS[i];
-    if(species[a])continue;
-    avail=POOL.filter(function(d){return !taken[d];});
-    pk=avail[Math.floor(Math.random()*avail.length)];
-    species[a]=pk;taken[pk]=1;
-  }
-}
+/* classic lineup: each table shows its original-era creature
+   1 Dustwing Moth · 2 Pipistrelle Bat · 3 Bogwart Toad · 4 Emberling Dragon
+   5 Cloudray · 6 Spiralshell Snail · 7 Tawny Owl · 8 Inkfoot Octopus
+   9 Rustpaw Fox · 10 Prickle Hedgehog */
+function designFor(a){return a;}
+function ensureSpecies(){}
 function eggSVG(a,px){
   var c=HUES[a];
   return '<svg viewBox="0 0 48 48" width="'+px+'" height="'+px+'" aria-hidden="true" style="opacity:.4">'+
