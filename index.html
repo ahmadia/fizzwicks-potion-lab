@@ -223,8 +223,8 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     <button class="peek" id="chartBtn">Peek at the chart</button>
     <div class="drops" id="drops" aria-hidden="true"></div>
     <div class="meta">
-      <div>Jars <b id="mastered">0</b>/40</div>
-      <div>Pets <b id="petCount">0</b>/4</div>
+      <div>Jars <b id="mastered">0</b>/100</div>
+      <div>Pets <b id="petCount">0</b>/10</div>
     </div>
   </section>
 
@@ -299,18 +299,18 @@ header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 (function(){
 "use strict";
 
-var KEY='fizzwick.v6', PRIOR=[];
-var ROUND=5, FAST=3000, BMAX=10, ROWS=[1,2,5,10], TOTAL=40;
+var KEY='fizzwick.v7', PRIOR=[];
+var ROUND=5, FAST=3000, BMAX=10, ROWS=[1,2,3,4,5,6,7,8,9,10], TOTAL=100;
 var REPS=3;          /* just-starting tier: 3 right (not in a row) lights a jar, no clock, no penalties */
-var HUES={1:'#6FE3B8',2:'#FFC061',3:'#FF7FA8',4:'#B99BFF',5:'#6FC9E8',6:'#FF8E72',7:'#C7E36F',8:'#E58BE0',10:'#9D8DF1'};
+var HUES={1:'#6FE3B8',2:'#FFC061',3:'#FF7FA8',4:'#B99BFF',5:'#6FC9E8',6:'#FF8E72',7:'#C7E36F',8:'#E58BE0',9:'#7EA8FF',10:'#9D8DF1'};
 var SUB={1:'one of everything',2:'doubles',3:'triples',4:'double the doubles',5:'counting by fives',
-         6:'double the threes',7:'the tricky ones',8:'double the fours',10:'counting by tens'};
+         6:'double the threes',7:'the tricky ones',8:'double the fours',9:'counting by nines',10:'counting by tens'};
 var SPECIES={1:'Dustwing Moth',2:'Pipistrelle Bat',3:'Bogwart Toad',4:'Emberling Dragon',
              5:'Cloudray',6:'Spiralshell Snail',7:'Tawny Owl',8:'Inkfoot Octopus',
              9:'Rustpaw Fox',10:'Prickle Hedgehog',11:'Snapclaw Crab',12:'Curlfin Seahorse',
              13:'Lantern Firefly',14:'Twinkle Starfish'};
 /* each table gets a random creature drawn from this pool (fixed once per save) */
-var POOL=[5,6,7,8,9,10,11,12,13,14];
+var POOL=[1,2,3,4,5,6,7,8,9,10,11,12,13,14];
 
 /* ===== STORY-DATA-START ===== warm micro-stories; {pet}/{pet2} become her hatchlings' names */
 var STORIES=[
@@ -585,7 +585,7 @@ function potionName(){
 }
 
 /* ================= storage (real localStorage, survives close/reopen) ================= */
-function snapshot(){return {v:6,facts:facts,plates:plates,pets:pets,used:used,species:species,usedStories:usedStories,storyLog:storyLog,brewed:brewed,sound:sound,calm:calm};}
+function snapshot(){return {v:7,facts:facts,plates:plates,pets:pets,used:used,species:species,usedStories:usedStories,storyLog:storyLog,brewed:brewed,sound:sound,calm:calm};}
 function save(){
   if(!storeOk)return;
   try{localStorage.setItem(KEY,JSON.stringify(snapshot()));}catch(e){storeOk=false;}
